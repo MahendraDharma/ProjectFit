@@ -34,7 +34,7 @@
   }, { rootMargin: '0px 0px -15% 0px' });
   document.querySelectorAll('.step').forEach(function (el) { seen.observe(el); });
 
-  // The mochi hops once as the hero settles, and again on a tap or hover of
+  // The mochi hops once as its phone comes into view, and again on a tap or hover of
   // the phone, as it does when tapped in the app.
   var mochi = document.querySelector('.mochi');
   var device = document.querySelector('.device');
@@ -45,7 +45,16 @@
     mochi.classList.add('play');
   }
   if (mochi) {
-    setTimeout(hop, 700);
+    // Once when its phone comes into view.
+    var once = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) {
+          setTimeout(hop, 450);
+          once.disconnect();
+        }
+      });
+    }, { rootMargin: '0px 0px -20% 0px' });
+    once.observe(mochi);
     mochi.addEventListener('animationend', function () { mochi.classList.remove('play'); }, true);
     if (device) {
       device.addEventListener('mouseenter', hop);

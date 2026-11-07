@@ -45,6 +45,7 @@ T = {
   "nav_features": "Features", "nav_privacy": "Privacy", "nav_install": "Install", "lang": "Language",
   "lead": "ProjectFit reads your WHOOP band and Garmin watch over Bluetooth and works out recovery, strain, sleep, stress and Body Battery on the phone itself. No account, no server, no subscription.",
   "cta": "Download free", "src": "Source code", "note": "iPhone and Android · open source (AGPL-3.0)",
+  "k_today": "Every morning", "h_today": "Your morning in one screen", "s_today": "Recovery, strain and sleep as three rings, and one line from the mochi about the day ahead. Tap it and it hops.",
   "k_features": "Features", "h_features": "The numbers that usually live in a cloud, in your pocket.",
   "s_features": "Every number comes from a published method with its constants written in the open. When there is not enough data yet, ProjectFit says so instead of guessing.",
   "stress_h": "Stress, scored only while you are still", "stress_p": "A 0–100 stress level from five-minute still windows, against how variable your heart is at night. Moving time is left blank, not scored.",
@@ -79,6 +80,7 @@ T = {
   "nav_features": "Fitur", "nav_privacy": "Privasi", "nav_install": "Pasang", "lang": "Bahasa",
   "lead": "ProjectFit membaca band WHOOP dan jam Garmin lewat Bluetooth, lalu menghitung recovery, strain, tidur, stres, dan Body Battery langsung di HP. Tanpa akun, tanpa server, tanpa langganan.",
   "cta": "Unduh gratis", "src": "Kode sumber", "note": "iPhone dan Android · open source (AGPL-3.0)",
+  "k_today": "Setiap pagi", "h_today": "Pagimu dalam satu layar", "s_today": "Recovery, strain, dan tidur dalam tiga cincin, ditambah satu kalimat dari mochi tentang hari ini. Ketuk mochinya, dia akan melompat.",
   "k_features": "Fitur", "h_features": "Angka yang biasanya ada di cloud, kini di saku Anda.",
   "s_features": "Setiap angka dihitung dengan metode yang dipublikasikan, dengan konstanta yang ditulis terbuka. Kalau datanya belum cukup, ProjectFit bilang begitu, bukan menebak.",
   "stress_h": "Stres, dihitung hanya saat Anda diam", "stress_p": "Tingkat stres 0–100 dari jendela diam lima menit, dibanding variasi jantung Anda di malam hari. Waktu bergerak dibiarkan kosong, tidak dinilai.",
@@ -113,6 +115,7 @@ T = {
   "nav_features": "機能", "nav_privacy": "プライバシー", "nav_install": "インストール", "lang": "言語",
   "lead": "ProjectFit は WHOOP バンドと Garmin ウォッチに Bluetooth で接続し、リカバリー、ストレイン、睡眠、ストレス、Body Battery をスマホ本体で計算します。アカウントもサーバーもサブスクリプションも不要です。",
   "cta": "無料でダウンロード", "src": "ソースコード", "note": "iPhone と Android · オープンソース (AGPL-3.0)",
+  "k_today": "毎朝", "h_today": "朝の様子をひと目で", "s_today": "リカバリー、ストレイン、睡眠を 3 つのリングで。その日のひとことはモチが伝えます。タップすると跳ねます。",
   "k_features": "機能", "h_features": "いつもはクラウドにある数値を、ポケットの中に。",
   "s_features": "すべての数値は公開された手法で計算し、定数も公開しています。データがまだ足りないときは、推測せずにそう表示します。",
   "stress_h": "静止しているときだけ測るストレス", "stress_p": "5 分間の静止区間から 0–100 のストレスを算出し、夜間の心拍変動と比較します。動いている時間は評価せず空白のままにします。",
@@ -147,6 +150,7 @@ T = {
   "nav_features": "功能", "nav_privacy": "隐私", "nav_install": "安装", "lang": "语言",
   "lead": "ProjectFit 通过蓝牙读取 WHOOP 手环和 Garmin 手表，在手机本机上计算恢复、负荷、睡眠、压力和 Body Battery。无需账号，无需服务器，无需订阅。",
   "cta": "免费下载", "src": "源代码", "note": "iPhone 与 Android · 开源 (AGPL-3.0)",
+  "k_today": "每天早上", "h_today": "一屏看清你的早晨", "s_today": "恢复、负荷和睡眠以三个圆环呈现，麻糬会用一句话告诉你今天的状态。点它一下，它会跳起来。",
   "k_features": "功能", "h_features": "原本在云端的数据，现在装进你的口袋。",
   "s_features": "每个数值都基于已发表的方法，常数全部公开。数据还不够时，ProjectFit 会直接告诉你，而不是去猜。",
   "stress_h": "只在静止时计算的压力", "stress_p": "根据五分钟的静止区间得出 0–100 的压力值，并与你夜间的心率变异性比较。活动时间留空，不计分。",
@@ -185,6 +189,16 @@ BAND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=
 PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg>'
 CLOUD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19H8a5 5 0 1 1 1-9.9A6 6 0 0 1 20 11a4 4 0 0 1-2.5 8Z"/></svg>'
 LOGO = '<svg viewBox="0 0 1024 1024" aria-hidden="true"><rect width="1024" height="1024" rx="228" fill="#111315"/><g transform="translate(512 512) scale(.86) translate(-532 -522)"><path d="M372 300 L372 744" stroke="#fff" stroke-width="80" stroke-linecap="round"/><circle cx="532" cy="460" r="160" fill="none" stroke="#fff" stroke-width="80"/><circle cx="676" cy="704" r="44" fill="#30D158"/></g></svg>'
+
+# The signature mark: the stroke draws itself, then the dot beats at a
+# resting 60 bpm with a ripple (the owner's favourite, back in the hero).
+MARK = ('<svg viewBox="300 220 480 600" role="img" aria-label="ProjectFit">'
+        '<path class="stroke" d="M372 744 L372 300"/>'
+        '<path class="stroke" d="M372 460 A160 160 0 1 1 692 460 A160 160 0 1 1 372 460"/>'
+        '<circle class="ring" cx="676" cy="704" r="44"/>'
+        '<circle class="dot" cx="676" cy="704" r="44"/></svg>')
+
+
 def strip_end(t):
     """Headlines and labels end without a period (unslop, copy pass)."""
     return t.rstrip(".。")
@@ -264,12 +278,21 @@ def page(code):
       </div>
       <p class="note">{h("note")}</p>
     </div>
-    <figure class="device" aria-label="{h("h1")}">
-      <div class="device-frame"><div class="shot"><img src="{hero_img}" alt="" width="390" height="430" fetchpriority="high"><span class="mochi" aria-hidden="true"><img src="{root}img/mochi_happy.webp" alt="" width="1320" height="44"></span></div></div>
-    </figure>
+    <div class="mark">{MARK}</div>
   </header>
 
   <div class="facts-band"><ul class="facts wrap">{facts}</ul></div>
+
+  <section id="today" class="wrap morning">
+    <div>
+      <p class="kicker">{h("k_today")}</p>
+      <h2>{h("h_today")}</h2>
+      <p class="sub">{e("s_today")}</p>
+    </div>
+    <figure class="device" data-reveal aria-label="{h("h_today")}">
+      <div class="device-frame"><div class="shot"><img src="{hero_img}" alt="" width="390" height="430" loading="lazy"><span class="mochi" aria-hidden="true"><img src="{root}img/mochi_happy.webp" alt="" width="1320" height="44"></span></div></div>
+    </figure>
+  </section>
 
   <section id="features" class="wrap">
     <p class="kicker">{h("k_features")}</p>

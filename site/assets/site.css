@@ -3,7 +3,8 @@
              out recovery, sleep, strain and stress on the phone, no account;
    character — candid, exact, quietly warm;
    world — the bedside table at 6:30 in the morning, the first look at the numbers;
-   moments — the real Home screen in the hero, the real cards in the feature tour;
+   moments — the "P." mark drawing itself in the hero (the owner's pick), the
+             real Home screen just below it, the real cards in the feature tour;
    signature — the green dot of the "P." mark, the only accent.
    Palette is the app's own dark ramp; type is the app's DM Sans. */
 
@@ -48,9 +49,17 @@ nav .wrap{display:flex;align-items:center;gap:24px;height:64px}
 .lang li a{display:block;padding:8px 12px;border-radius:8px;text-decoration:none;font-size:14px;color:var(--ink2)}
 .lang li a:hover,.lang li a[aria-current]{background:var(--raised);color:var(--ink)}
 
-/* ── hero: text left, the real Home screen right, rising past the edge ── */
-.hero{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:64px;align-items:end;padding-top:96px}
-.hero-text{align-self:center;padding-bottom:48px}
+/* ── hero: text left, the "P." mark right ── */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:64px;align-items:center;padding-top:96px;padding-bottom:96px}
+.mark{display:grid;place-items:center}
+.mark svg{width:min(340px,80%);height:auto;overflow:visible}
+.mark .stroke{fill:none;stroke:var(--ink);stroke-width:80;stroke-linecap:round}
+.mark .dot{fill:var(--accent);transform-box:fill-box;transform-origin:center}
+.mark .ring{fill:none;stroke:var(--accent);stroke-width:6;opacity:0;transform-box:fill-box;transform-origin:center}
+
+/* ── this morning: the real Home screen, rising past its edge ── */
+.morning{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:64px;align-items:end}
+.morning>div{align-self:center}
 h1{font-family:var(--display);font-weight:500;font-size:clamp(40px,4.8vw,64px);line-height:1.04;letter-spacing:-.03em;margin:0 0 24px;max-width:13em}
 :lang(ja) h1,:lang(zh) h1,:lang(ja) h2,:lang(zh) h2{word-break:auto-phrase;letter-spacing:0}
 :lang(ja) h1,:lang(zh) h1{font-size:clamp(34px,4.4vw,54px);line-height:1.2}
@@ -143,8 +152,9 @@ footer .langs a{margin-right:16px}
 
 @media (max-width:960px){
   .wrap{padding:0 16px}
-  .hero{grid-template-columns:1fr;gap:40px;padding-top:56px}
-  .hero-text{padding-bottom:0}
+  .hero{grid-template-columns:1fr;gap:32px;padding-top:40px;padding-bottom:64px}
+  .mark{order:-1;justify-items:start}.mark svg{width:120px}
+  .morning{grid-template-columns:1fr;gap:32px}
   .device{justify-self:center;max-width:360px}
   .scrolly{grid-template-columns:1fr}
   /* The tour on a phone: a smaller pinned phone under the nav, its screen
@@ -172,16 +182,21 @@ footer .langs a{margin-right:16px}
   footer{margin-top:96px}
 }
 
-/* ── motion: one entrance, the mochi's hop, the data's way, the tour's turn.
-   Each runs once and explains something; nothing loops. ── */
+/* ── motion: one entrance, the mark's heartbeat, the mochi's hop, the data's
+   way, the tour's turn. Only the heartbeat repeats. ── */
 @media (prefers-reduced-motion:no-preference){
   html{scroll-behavior:smooth}
   .btn,.lang summary,.links a{transition:background-color .15s var(--ease),color .15s var(--ease),transform .12s var(--ease)}
-  .hero-text>*,.device{animation:rise .45s var(--ease) both}
+  .hero-text>*{animation:rise .45s var(--ease) both}
   .hero-text>:nth-child(2){animation-delay:.05s}
   .hero-text>:nth-child(3){animation-delay:.1s}
   .hero-text>:nth-child(4){animation-delay:.15s}
-  .device{animation-delay:.2s}
+  /* The mark: its stroke draws, the dot pops in, then beats at a resting
+     60 bpm with a ripple. The one loop on the page, by the owner's choice:
+     it is the heartbeat the app measures. */
+  .mark .stroke{stroke-dasharray:1400;stroke-dashoffset:1400;animation:draw 1.6s .1s cubic-bezier(.6,0,.2,1) forwards}
+  .mark .dot{animation:pop .5s 1.4s both,beat 1s 2s ease-in-out infinite}
+  .mark .ring{animation:ripple 1s 2s ease-out infinite}
   /* The app's own cycle: 30 frames over 2.2 s, as Motion.mochi in the app. */
   .js .mochi.play img{animation:mochi 2.2s steps(30,jump-none) both}
   .js .device{cursor:pointer}
@@ -203,6 +218,10 @@ footer .langs a{margin-right:16px}
   .js [data-reveal].in{opacity:1;transform:none}
 }
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes beat{0%,100%{transform:scale(1)}14%{transform:scale(1.22)}28%{transform:scale(1)}42%{transform:scale(1.12)}56%{transform:scale(1)}}
+@keyframes ripple{0%{opacity:.5;transform:scale(1)}100%{opacity:0;transform:scale(2.6)}}
 /* 30 frames, jump-none: 29 one-frame moves, 29/30 of the strip. */
 @keyframes mochi{from{transform:translateX(0)}to{transform:translateX(-96.6667%)}}
 @keyframes ride{from{transform:translateX(0)}to{transform:translateX(100%)}}
