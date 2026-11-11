@@ -1097,6 +1097,20 @@ class _ActivitySummaryState extends State<ActivitySummary> {
                 ),
               ),
             ),
+          // Sharing is what people do right after a workout, so it is a
+          // named button here, not only the small icon in the bar above.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(S.x4, S.x3, S.x4, S.x3),
+            child: BigButton(
+              l?.activitySummaryShareThis(a.displayName(context).toLowerCase()) ??
+                  'Share this ${a.name.toLowerCase()}',
+              icon: LucideIcons.share2,
+              color: a.color,
+              soft: true,
+              onTap: () => Navigator.of(c)
+                  .push(MaterialPageRoute(builder: (_) => ShareSheet(r))),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: S.x4),
             // Display labels are localized; `_tabs` itself stays the fixed

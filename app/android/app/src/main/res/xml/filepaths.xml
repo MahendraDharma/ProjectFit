@@ -2,4 +2,6 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- ota_update downloads the APK to <internal files>/ota_update/ -->
     <files-path name="internal_apk_storage" path="ota_update/" />
+    <!-- Images handed to Instagram's story editor (NativeChannels, instagram). -->
+    <cache-path name="instagram" path="instagram/" />
 </paths>

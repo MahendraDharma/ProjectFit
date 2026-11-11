@@ -626,5 +626,9 @@
   "fitPlanDeleteBody": "Jadwal dan tanda selesaimu akan dihapus.",
   "fitPlanDeleteYes": "Akhiri",
   "activityCatalogueName": "{key, select, krunning{Lari} ktrailrunning{Lari trail} kwalking{Jalan kaki} khiking{Mendaki} kcycling{Bersepeda} kindoorbike{Sepeda statis} krowing{Mendayung} kswimming{Berenang} kelliptical{Elliptical} kstairclimber{Naik tangga} ktreadmill{Treadmill} kjumprope{Lompat tali} kweighttraining{Latihan beban} kpowerlifting{Powerlifting} kbodyweight{Beban tubuh} kcalisthenics{Kalistenik} kkettlebell{Kettlebell} kcrossfit{CrossFit} khiit{HIIT} kcircuittraining{Latihan sirkuit} kfunctional{Latihan fungsional} other{{name}}}",
-  "@activityCatalogueName": {"placeholders": {"key": {"type": "String"}, "name": {"type": "String"}}}
+  "@activityCatalogueName": {"placeholders": {"key": {"type": "String"}, "name": {"type": "String"}}},
+  "activityShareSticker": "Stiker",
+  "activityShareStickerHint": "Angka latihan dengan latar transparan, untuk ditempel di atas foto atau videomu sendiri di story Instagram",
+  "activityShareInstagramStory": "Story Instagram",
+  "activityShareInstagramFailed": "Instagram tidak bisa dibuka. Pakai tombol Bagikan saja."
 }

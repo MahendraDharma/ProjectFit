@@ -47,6 +47,7 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>gcm-ciq</string>
+		<string>instagram-stories</string>
 	</array>
 	<key>CFBundleDisplayName</key>
 	<string>ProjectFit</string>

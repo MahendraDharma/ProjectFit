@@ -363,5 +363,7 @@
         </intent>
         <!-- Health Connect app discovery (for install/status checks). -->
         <package android:name="com.google.android.apps.healthdata" />
+        <!-- Instagram's story editor, for the direct share (Android 11+ visibility). -->
+        <package android:name="com.instagram.android" />
     </queries>
 </manifest>

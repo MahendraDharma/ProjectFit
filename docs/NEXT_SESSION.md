@@ -211,6 +211,19 @@ selection lacks (chin-up, dips, push-up variants, bodyweight squat, lunges, core
 sumo/trap-bar deadlift, good morning, farmer's walk), named in de/es/fr/id and ru (the
 `exerciseCatalogueName` select). Not in the picker's short list; search ranks name hits first.
 
+## Sharing to Instagram (owner, 2026-11-11, v0.26.0)
+- The summary has a named "Share this <activity>" button (the nav icon stays).
+- The share sheet offers Post · Story · **Sticker**: `StoryStickerCard` in
+  `ui2/activity/instagram.dart` — the numbers and route on a transparent background.
+- **Instagram story** button (direct into Instagram's story editor) appears only when
+  `kMetaAppId` is set (`String.fromEnvironment('META_APP_ID')`, or paste it as the default) AND
+  Instagram is installed. Meta requires a Facebook App ID for this since 2023; it is the owner's
+  (developers.facebook.com → Create app), not made here. iOS: `InstagramBridge` in AppDelegate.swift
+  (pasteboard + `instagram-stories://share`, `LSApplicationQueriesSchemes`). Android: the
+  `com.instagram.share.ADD_TO_STORY` intent in NativeChannels.kt; images go through the OTA
+  FileProvider (`cache-path instagram/` in res/xml/filepaths.xml), `<queries>` has
+  com.instagram.android. Untested on a device until the ID exists.
+
 ## Fit program (owner, 2026-11-04, v0.25.0)
 `lib/ui2/program/fit_plan.dart` (pure, tested in fit_plan_test.dart) builds an N-day plan from
 the person's choices: 14/30/60/90 days, goal (general / strength / fat loss), calisthenics or

@@ -119,6 +119,10 @@ import AlarmKit
     if let registrar = registry.registrar(forPlugin: "PhoneAlarmBridge") {
       PhoneAlarmBridge.register(messenger: registrar.messenger())
     }
+    // Instagram Stories, straight in (lib/ui2/activity/instagram.dart).
+    if let registrar = registry.registrar(forPlugin: "InstagramBridge") {
+      InstagramBridge.register(messenger: registrar.messenger())
+    }
     // The phone's OWN step count (CMPedometer), not HealthKit's multi-writer
     // aggregate. See lib/health/phone_pedometer.dart.
     if let registrar = registry.registrar(forPlugin: "PedometerBridge") {
@@ -521,3 +525,50 @@ enum PhoneAlarmKit {
   }
 }
 #endif
+
+
+// ═══════════════════ Instagram Stories ═══════════════════
+
+/// Meta's documented "Sharing to Stories" route: the images go on the
+/// pasteboard under the com.instagram.sharedSticker.* keys (expiring in five
+/// minutes), then instagram-stories://share?source_application=<App ID> opens
+/// the story editor with them. The App ID is the owner's; Dart only offers
+/// this when one is set. Answers false when Instagram cannot be opened.
+enum InstagramBridge {
+  private static let channelName = "projectfit/instagram"
+
+  static func register(messenger: FlutterBinaryMessenger) {
+    let ch = FlutterMethodChannel(name: channelName, binaryMessenger: messenger)
+    ch.setMethodCallHandler { call, result in
+      switch call.method {
+      case "available":
+        guard let url = URL(string: "instagram-stories://share") else { result(false); return }
+        result(UIApplication.shared.canOpenURL(url))
+      case "shareStory":
+        let args = call.arguments as? [String: Any] ?? [:]
+        guard let appId = args["appId"] as? String, !appId.isEmpty,
+              let url = URL(string: "instagram-stories://share?source_application=\(appId)"),
+              UIApplication.shared.canOpenURL(url)
+        else { result(false); return }
+        var item: [String: Any] = [:]
+        if let bg = args["background"] as? FlutterStandardTypedData {
+          item["com.instagram.sharedSticker.backgroundImage"] = bg.data
+        }
+        if let st = args["sticker"] as? FlutterStandardTypedData {
+          item["com.instagram.sharedSticker.stickerImage"] = st.data
+        }
+        if let top = args["top"] as? String {
+          item["com.instagram.sharedSticker.backgroundTopColor"] = top
+        }
+        if let bottom = args["bottom"] as? String {
+          item["com.instagram.sharedSticker.backgroundBottomColor"] = bottom
+        }
+        UIPasteboard.general.setItems(
+          [item], options: [.expirationDate: Date().addingTimeInterval(300)])
+        UIApplication.shared.open(url, options: [:]) { ok in result(ok) }
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+}

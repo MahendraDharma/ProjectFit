@@ -37,6 +37,8 @@ object NativeChannels {
     private const val DEVICE_ACTIONS_CHANNEL = "projectfit/device_actions"
     private const val ANDROID_BG_CHANNEL = "projectfit/android_background"
     private const val BLE_NATIVE_CHANNEL = "projectfit/ble_native"
+    private const val INSTAGRAM_CHANNEL = "projectfit/instagram"
+    private const val INSTAGRAM_PACKAGE = "com.instagram.android"
     const val TASKER_CHANNEL = "projectfit/tasker"
     const val ACTION_DOUBLE_TAP = "io.github.mahendradharma.projectfit.DOUBLE_TAP"
     private const val TASKER_TOKEN_KEY = "tasker_auth_token"
@@ -60,6 +62,51 @@ object NativeChannels {
     private var activeRingtone: Ringtone? = null
     private val ringHandler = Handler(Looper.getMainLooper())
     private var ringStopRunnable: Runnable? = null
+
+    private fun instagramStoryIntent(app: Context): Intent =
+        Intent("com.instagram.share.ADD_TO_STORY").setPackage(INSTAGRAM_PACKAGE).setType("image/png")
+
+    /**
+     * Writes the images to cache/instagram/ and hands them to Instagram's story
+     * editor. The content URIs come from the OTA FileProvider already declared
+     * in the manifest (its paths include cache/instagram/), built in
+     * FileProvider's own content://<authority>/<path-name>/<file> form so no
+     * androidx.core compile dependency is added for one call.
+     */
+    private fun shareInstagramStory(app: Context, call: io.flutter.plugin.common.MethodCall): Boolean {
+        val appId = call.argument<String>("appId") ?: return false
+        if (appId.isEmpty()) return false
+        val dir = java.io.File(app.cacheDir, "instagram").apply { mkdirs() }
+        val authority = "${app.packageName}.ota_update_provider"
+        fun uriOf(bytes: ByteArray?, name: String): Uri? {
+            bytes ?: return null
+            java.io.File(dir, name).writeBytes(bytes)
+            return Uri.parse("content://$authority/instagram/$name")
+        }
+        val background = uriOf(call.argument<ByteArray>("background"), "background.png")
+        val sticker = uriOf(call.argument<ByteArray>("sticker"), "sticker.png")
+        if (background == null && sticker == null) return false
+        val intent = instagramStoryIntent(app).apply {
+            putExtra("source_application", appId)
+            if (background != null) setDataAndType(background, "image/png")
+            if (sticker != null) {
+                putExtra("interactive_asset_uri", sticker)
+                putExtra("top_background_color", call.argument<String>("top"))
+                putExtra("bottom_background_color", call.argument<String>("bottom"))
+            }
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        for (u in listOfNotNull(background, sticker)) {
+            app.grantUriPermission(INSTAGRAM_PACKAGE, u, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        if (intent.resolveActivity(app.packageManager) == null) return false
+        return try {
+            app.startActivity(intent)
+            true
+        } catch (e: ActivityNotFoundException) {
+            false
+        }
+    }
 
     fun register(engine: FlutterEngine, context: Context) {
         val app = context.applicationContext
@@ -193,6 +240,17 @@ object NativeChannels {
                         )
                     )
                     "perform" -> result.success(perform(app, call.argument<String>("action") ?: ""))
+                    else -> result.notImplemented()
+                }
+            }
+
+        // Instagram Stories, straight in (lib/ui2/activity/instagram.dart):
+        // Meta's documented ADD_TO_STORY intent with the owner's App ID.
+        MethodChannel(engine.dartExecutor.binaryMessenger, INSTAGRAM_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "available" -> result.success(instagramStoryIntent(app).resolveActivity(app.packageManager) != null)
+                    "shareStory" -> result.success(shareInstagramStory(app, call))
                     else -> result.notImplemented()
                 }
             }

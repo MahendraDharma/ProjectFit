@@ -8106,5 +8106,9 @@
   "fitPlanEdit": "Изменить программу",
   "fitPlanDelete": "Завершить программу",
   "fitPlanDeleteBody": "Расписание и отметки будут удалены.",
-  "fitPlanDeleteYes": "Завершить"
+  "fitPlanDeleteYes": "Завершить",
+  "activityShareSticker": "Стикер",
+  "activityShareStickerHint": "Цифры на прозрачном фоне, чтобы положить их поверх своего фото или видео в сторис Instagram",
+  "activityShareInstagramStory": "Сторис в Instagram",
+  "activityShareInstagramFailed": "Не удалось открыть Instagram. Воспользуйтесь кнопкой «Поделиться»."
 }

@@ -17,6 +17,7 @@
 // is not printed, so it cannot be shared.
 
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:file_picker/file_picker.dart';
@@ -31,6 +32,7 @@ import '../../state/units_controller.dart';
 import '../grammar.dart';
 import '../profile/profile.dart' show SetRow;
 import '../theme.dart';
+import 'instagram.dart';
 import 'poster.dart';
 import 'summary.dart';
 import 'tiles.dart';
@@ -70,6 +72,14 @@ class _ShareSheetState extends State<ShareSheet> {
   /// Where the card is going. The one thing besides the photo that changes it.
   PosterFormat _format = PosterFormat.post;
 
+  /// The third choice beside Post and Story: the numbers alone, transparent,
+  /// to lay over the person's own photo or video inside Instagram.
+  bool _sticker = false;
+
+  /// Whether Instagram's story editor can be opened directly (an App ID, and
+  /// Instagram installed). Null until asked.
+  bool? _instagram;
+
   /// The basemap. Fetched per FORMAT, because the mosaic is built at the
   /// card's aspect — see the note on [kPosterMapH]. Held so that flipping
   /// back to a format already fetched does not re-hit the tile server, which
@@ -96,6 +106,43 @@ class _ShareSheetState extends State<ShareSheet> {
   /// all — not which of several cards to draw, because there is one card.
   bool get _hasRoute => r.geo.length >= 2;
 
+  /// The card or the sticker on screen, as a PNG at export resolution.
+  Future<Uint8List?> _capture() async {
+    final boundary =
+        _card.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    final image = await boundary.toImage(pixelRatio: 3);
+    final png = await image.toByteData(format: ui.ImageByteFormat.png);
+    return png?.buffer.asUint8List();
+  }
+
+  /// Straight into Instagram's story editor: the card as the picture, or the
+  /// sticker over the activity's colour for the person to swap for their own.
+  Future<void> _shareInstagram() async {
+    if (_sharing) return;
+    _sharing = true;
+    final messenger = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context);
+    try {
+      final png = await _capture();
+      if (png == null) return;
+      final color = r.activity.color;
+      final ok = await shareInstagramStory(
+        background: _sticker ? null : png,
+        sticker: _sticker ? png : null,
+        top: Color.lerp(color, C.n900, .55)!,
+        bottom: C.n900,
+      );
+      if (!ok && mounted) {
+        messenger.showSnackBar(SnackBar(
+            content: Text(l?.activityShareInstagramFailed ??
+                'Instagram could not be opened. Use Share instead.')));
+      }
+    } finally {
+      _sharing = false;
+    }
+  }
+
   Future<void> _share() async {
     if (_sharing) return;
     _sharing = true;
@@ -103,15 +150,11 @@ class _ShareSheetState extends State<ShareSheet> {
     final origin = shareOrigin(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final boundary =
-          _card.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) return;
-      final image = await boundary.toImage(pixelRatio: 3);
-      final png = await image.toByteData(format: ui.ImageByteFormat.png);
+      final png = await _capture();
       if (png == null) return;
       await Share.shareXFiles(
         [
-          XFile.fromData(png.buffer.asUint8List(),
+          XFile.fromData(png,
               mimeType: 'image/png', name: '${r.activity.typeKey}.png'),
         ],
         sharePositionOrigin: origin,
@@ -207,6 +250,9 @@ class _ShareSheetState extends State<ShareSheet> {
   @override
   void initState() {
     super.initState();
+    instagramStoriesAvailable().then((v) {
+      if (mounted) setState(() => _instagram = v);
+    });
     if (_hasRoute) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _ensureMap());
     }
@@ -250,15 +296,29 @@ class _ShareSheetState extends State<ShareSheet> {
                   Center(
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: RepaintBoundary(
-                        key: _card,
-                        child: PosterCard(
-                          r,
-                          photo: _photo == null ? null : FileImage(_photo!),
-                          mosaic: _mosaic,
-                          format: _format,
-                        ),
-                      ),
+                      child: _sticker
+                          // The sticker is transparent; the surface behind it
+                          // is only for seeing it here and is not exported.
+                          ? Container(
+                              decoration: BoxDecoration(
+                                  color: Color.lerp(
+                                      r.activity.color, C.n900, .55),
+                                  borderRadius: R.rLg),
+                              child: RepaintBoundary(
+                                key: _card,
+                                child: StoryStickerCard(r),
+                              ),
+                            )
+                          : RepaintBoundary(
+                              key: _card,
+                              child: PosterCard(
+                                r,
+                                photo:
+                                    _photo == null ? null : FileImage(_photo!),
+                                mosaic: _mosaic,
+                                format: _format,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: S.x6),
@@ -267,14 +327,31 @@ class _ShareSheetState extends State<ShareSheet> {
                   // own ratio, so this is the difference between posting the
                   // card and posting a crop of it.
                   SubTabs(
-                    [for (final f in PosterFormat.values) posterFormatLabel(c, f)],
-                    PosterFormat.values.indexOf(_format),
+                    [
+                      for (final f in PosterFormat.values) posterFormatLabel(c, f),
+                      l?.activityShareSticker ?? 'Sticker',
+                    ],
+                    _sticker
+                        ? PosterFormat.values.length
+                        : PosterFormat.values.indexOf(_format),
                     (i) {
-                      setState(() => _format = PosterFormat.values[i]);
-                      _ensureMap();
+                      setState(() {
+                        _sticker = i == PosterFormat.values.length;
+                        if (!_sticker) _format = PosterFormat.values[i];
+                      });
+                      if (!_sticker) _ensureMap();
                     },
                     color: r.activity.color,
                   ),
+                  if (_sticker) ...[
+                    const SizedBox(height: S.x3),
+                    Text(
+                        l?.activityShareStickerHint ??
+                            'The numbers on a clear background, to lay over your '
+                                'own photo or video in an Instagram story',
+                        style: F.cap.copyWith(color: p.ink3)),
+                  ],
+                  if (!_sticker) ...[
                   const SizedBox(height: S.x6),
                   Text(l?.activitySharePhotoHeader ?? 'Your photo',
                       style: F.over.copyWith(color: p.ink3)),
@@ -303,11 +380,12 @@ class _ShareSheetState extends State<ShareSheet> {
                       ],
                     ]),
                   ),
+                  ],
                   // The one thing on this screen that leaves the phone. Off
                   // until it is turned on, in the words of what it does — the
                   // tiles are addressed by where the route is, so asking for
                   // them tells openstreetmap.org roughly where you were.
-                  if (_hasRoute) ...[
+                  if (_hasRoute && !_sticker) ...[
                     const SizedBox(height: S.x6),
                     Text(l?.activityShareBasemapHeader ?? 'Basemap',
                         style: F.over.copyWith(color: p.ink3)),
@@ -333,7 +411,7 @@ class _ShareSheetState extends State<ShareSheet> {
                   // appear the instant a format was selected and sit there for
                   // the whole fetch, because `_mapTried` is set before the
                   // first await.
-                  if (_hasRoute && _mapBusy) ...[
+                  if (_hasRoute && !_sticker && _mapBusy) ...[
                     const SizedBox(height: S.x3),
                     StatusCard(
                       l?.activityShareFetchingMapTitle ?? 'Fetching the map',
@@ -347,6 +425,7 @@ class _ShareSheetState extends State<ShareSheet> {
                   // would be explaining an absence that is not one — and
                   // neither is a basemap the user has switched off.
                   else if (_hasRoute &&
+                      !_sticker &&
                       _mapConsent &&
                       _mapTried_ &&
                       _mosaic == null) ...[
@@ -365,10 +444,23 @@ class _ShareSheetState extends State<ShareSheet> {
                   // where "story", "message" and "save" actually live. The
                   // four destination tiles that used to sit here were four
                   // integrations this app does not have.
+                  // Straight into Instagram's story editor, when it can be:
+                  // the owner's Facebook App ID is set and Instagram is on
+                  // this phone. The system sheet below lists Instagram too.
+                  if (_instagram == true) ...[
+                    BigButton(
+                      l?.activityShareInstagramStory ?? 'Instagram story',
+                      icon: LucideIcons.circleFadingPlus,
+                      color: r.activity.color,
+                      onTap: _shareInstagram,
+                    ),
+                    const SizedBox(height: S.x3),
+                  ],
                   BigButton(
                     l?.activityShareTitle ?? 'Share',
                     icon: LucideIcons.share2,
                     color: r.activity.color,
+                    soft: _instagram == true,
                     onTap: _share,
                   ),
                   if (r.private) ...[

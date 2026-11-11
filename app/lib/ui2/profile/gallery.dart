@@ -86,6 +86,7 @@ import '../../ble/garmin_link.dart' show GarminSyncReport;
 import 'profile.dart';
 import 'wearable_numbers.dart';
 import '../program/fit_plan.dart';
+import '../activity/instagram.dart' show StoryStickerCard;
 import '../program/fit_plan_screen.dart' show FitPlanCard;
 
 /// A deterministic series — a gallery cannot depend on random data.
@@ -1523,6 +1524,10 @@ Map<String, Widget> _stateCases() => {
 /// and the old four-row ceiling silently dropped whatever came after.
 Map<String, Widget> _shareCases() => {
       for (final s in _sessions.entries) 'share_${s.key}': PosterCard(s.value),
+      'story_sticker': ColoredBox(
+          color: C.n900, child: StoryStickerCard(_sessions['route']!)),
+      'story_sticker_lift': ColoredBox(
+          color: C.n900, child: StoryStickerCard(_sessions['strength']!)),
     };
 
 /// The fixture sessions, for a test that has to build one screen per

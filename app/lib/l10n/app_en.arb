@@ -16388,5 +16388,9 @@
   "fitPlanEdit": "Change program",
   "fitPlanDelete": "End program",
   "fitPlanDeleteBody": "The schedule and your ticks are cleared.",
-  "fitPlanDeleteYes": "End it"
+  "fitPlanDeleteYes": "End it",
+  "activityShareSticker": "Sticker",
+  "activityShareStickerHint": "The numbers on a clear background, to lay over your own photo or video in an Instagram story",
+  "activityShareInstagramStory": "Instagram story",
+  "activityShareInstagramFailed": "Instagram could not be opened. Use Share instead."
 }
