@@ -26,7 +26,15 @@ State at the end of the last session, and what to pick up.
   a troubleshooting table keyed by error message.
 
 ## iPhone release
-- Latest release: **v0.25.0** (2026-11-04): 36 more exercises, Body Battery recalibrated, alarm
+- Latest release: **v0.26.0** (2026-11-11): share to Instagram (named Share button, transparent
+  sticker, direct story button once a Facebook App ID is set).
+- **The repository was renamed to `MahendraDharma/ProjectFit`** (no hyphen) around 2026-11-11.
+  Git push and the GitHub MCP tools still reach it under the old name; `gh api` through the
+  session proxy does not (it follows GitHub's redirect to a numeric-ID path, which the proxy
+  refuses), so dispatch and read runs with `mcp__github__actions_run_trigger` /
+  `mcp__github__actions_list`. The website and `apps.json` URLs still say `Project-Fit` until
+  the owner confirms the rename.
+  v0.25.0 (2026-11-04): 36 more exercises, Body Battery recalibrated, alarm
   rings until the double tap (AlarmKit / Android full-screen, 520 Hz tone), fit program.
   v0.24.0 (2026-11-04): alarm "try it now", phone tone Normal/Super loud,
   band Normal/Super strong (iOS build needed three attempts: GitHub macOS capacity).
