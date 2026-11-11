@@ -1306,8 +1306,10 @@ class _ActivitySummaryState extends State<ActivitySummary> {
               '${r.strength.setCount}',
               l?.activitySummarySetUnit(r.strength.setCount) ??
                   (r.strength.setCount == 1 ? 'set' : 'sets'),
-              l?.activitySummaryNothingLoggedWithLoad ??
-                  'Nothing was logged with a load'
+              // A bodyweight session: the reps are what it did, not a
+              // missing load.
+              l?.activitySummaryBodyweightReps(r.strength.repCount) ??
+                  '${r.strength.repCount} reps · bodyweight'
             )
           : (
               grouped(_u?.weightValue(r.strength.volumeKg!) ??
@@ -1824,7 +1826,9 @@ class _ActivitySummaryState extends State<ActivitySummary> {
                 ]),
               ),
             ),
-          if (r.strength.hasUnloadedSets)
+          // Only a MIX needs explaining: when nothing had a load there is no
+          // volume for the unloaded sets to be left out of.
+          if (r.strength.hasUnloadedSets && r.strength.volumeKg != null)
             Padding(
               padding: const EdgeInsets.only(top: S.x4),
               child: StatusCard(

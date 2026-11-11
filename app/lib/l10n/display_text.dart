@@ -164,6 +164,11 @@ String localizedText(AppLocalizations? l, String text) {
     "Alarm not confirmed" => l.settingsAlarmLatchFailedRowTitle,
     "Already syncing." => l.supplementAlreadySyncing7ed158,
     "Avg HR" => l.logWorkoutAvgHr,
+    "Sets" => l.strengthShareSets,
+    "Pace" => l.activitySummaryPace,
+    "Volume" => l.strengthShareVolume,
+    "Elevation" => l.activitySummaryElevationTitle,
+    "Laps" => l.activitySummaryLapsTitle,
     "Awake min" => l.supplementAwakeMin81d9ac,
     "Baevsky stress index over a resting window: a histogram measure of how tightly beat intervals cluster. There is deliberately no fallback when the resting window is missing." =>
       l.supplementBaevskyStressIndexOverA037465,

@@ -87,6 +87,7 @@ import 'profile.dart';
 import 'wearable_numbers.dart';
 import '../program/fit_plan.dart';
 import '../activity/instagram.dart' show StoryStickerCard;
+import '../activity/strength_share.dart' show StrengthDesign, StrengthShareCard;
 import '../program/fit_plan_screen.dart' show FitPlanCard;
 
 /// A deterministic series — a gallery cannot depend on random data.
@@ -1528,6 +1529,14 @@ Map<String, Widget> _shareCases() => {
           color: C.n900, child: StoryStickerCard(_sessions['route']!)),
       'story_sticker_lift': ColoredBox(
           color: C.n900, child: StoryStickerCard(_sessions['strength']!)),
+      for (final d in StrengthDesign.values)
+        'strength_share_${d.name}':
+            StrengthShareCard(_sessions['strength']!, design: d),
+      'strength_share_story': StrengthShareCard(_sessions['strength']!,
+          format: PosterFormat.story),
+      'strength_share_sticker': ColoredBox(
+          color: C.n900,
+          child: StrengthShareCard(_sessions['strength']!, clear: true)),
     };
 
 /// The fixture sessions, for a test that has to build one screen per

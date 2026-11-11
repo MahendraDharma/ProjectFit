@@ -34,6 +34,7 @@ import '../profile/profile.dart' show SetRow;
 import '../theme.dart';
 import 'instagram.dart';
 import 'poster.dart';
+import 'strength_share.dart';
 import 'summary.dart';
 import 'tiles.dart';
 
@@ -76,6 +77,13 @@ class _ShareSheetState extends State<ShareSheet> {
   /// to lay over the person's own photo or video inside Instagram.
   bool _sticker = false;
 
+  /// Dark type on the sticker, for a bright photo.
+  bool _darkInk = false;
+
+  /// A lift's design, swiped through like a workout log's share cards.
+  StrengthDesign _design = StrengthDesign.workout;
+  late final _pages = PageController(viewportFraction: 1);
+
   /// Whether Instagram's story editor can be opened directly (an App ID, and
   /// Instagram installed). Null until asked.
   bool? _instagram;
@@ -106,6 +114,10 @@ class _ShareSheetState extends State<ShareSheet> {
   /// all — not which of several cards to draw, because there is one card.
   bool get _hasRoute => r.geo.length >= 2;
 
+  /// A lift or a calisthenics session with sets in it: shared as one of the
+  /// [StrengthDesign]s instead of the route card.
+  bool get _strength => r.arch == Arch.strength && !r.strength.isEmpty;
+
   /// The card or the sticker on screen, as a PNG at export resolution.
   Future<Uint8List?> _capture() async {
     final boundary =
@@ -134,9 +146,14 @@ class _ShareSheetState extends State<ShareSheet> {
         bottom: C.n900,
       );
       if (!ok && mounted) {
-        messenger.showSnackBar(SnackBar(
-            content: Text(l?.activityShareInstagramFailed ??
-                'Instagram could not be opened. Use Share instead.')));
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              l?.activityShareInstagramFailed ??
+                  'Instagram could not be opened. Use Share instead.',
+            ),
+          ),
+        );
       }
     } finally {
       _sharing = false;
@@ -152,21 +169,25 @@ class _ShareSheetState extends State<ShareSheet> {
     try {
       final png = await _capture();
       if (png == null) return;
-      await Share.shareXFiles(
-        [
-          XFile.fromData(png,
-              mimeType: 'image/png', name: '${r.activity.typeKey}.png'),
-        ],
-        sharePositionOrigin: origin,
-      );
+      await Share.shareXFiles([
+        XFile.fromData(
+          png,
+          mimeType: 'image/png',
+          name: '${r.activity.typeKey}.png',
+        ),
+      ], sharePositionOrigin: origin);
     } catch (e) {
       // A share that quietly does nothing is worse than one that says it
       // failed: this swallowed every iPad share for the life of the screen.
       if (mounted) {
         final l = AppLocalizations.of(context);
-        messenger.showSnackBar(SnackBar(
+        messenger.showSnackBar(
+          SnackBar(
             content: Text(
-                l?.activityShareOpenFailed ?? 'Could not open the share sheet.')));
+              l?.activityShareOpenFailed ?? 'Could not open the share sheet.',
+            ),
+          ),
+        );
       }
       debugPrint('share failed: $e');
     } finally {
@@ -179,8 +200,10 @@ class _ShareSheetState extends State<ShareSheet> {
   /// or it has the accent gradient.
   Future<void> _pickPhoto() async {
     try {
-      final picked = await FilePicker.platform
-          .pickFiles(type: FileType.image, allowMultiple: false);
+      final picked = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
       final path = picked?.files.single.path;
       if (path != null && mounted) setState(() => _photo = File(path));
     } catch (e) {
@@ -263,7 +286,123 @@ class _ShareSheetState extends State<ShareSheet> {
     for (final m in _mosaics.values) {
       m.dispose();
     }
+    _pages.dispose();
     super.dispose();
+  }
+
+  /// The strength designs, side by side: swipe or tap a name to change.
+  /// Only the page on screen carries the capture key, so the picture shared
+  /// is the design being looked at.
+  Widget _strengthCards(BuildContext c) {
+    final p = P.of(c);
+    final h = _sticker ? kStrengthStickerH : _format.height;
+    return Column(
+      children: [
+        LayoutBuilder(
+          builder: (c, box) {
+            final k = (box.maxWidth / kPosterW).clamp(0.0, 1.0);
+            return SizedBox(
+              height: h * k,
+              child: PageView(
+                controller: _pages,
+                onPageChanged: (i) =>
+                    setState(() => _design = StrengthDesign.values[i]),
+                children: [
+                  for (final d in StrengthDesign.values)
+                    Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Container(
+                          // The sticker is clear; this surface is only for seeing
+                          // it here and is not exported.
+                          decoration: _sticker
+                              ? BoxDecoration(
+                                  color: _darkInk
+                                      ? Color.lerp(
+                                          r.activity.color,
+                                          C.white,
+                                          .75,
+                                        )
+                                      : Color.lerp(
+                                          r.activity.color,
+                                          C.n900,
+                                          .55,
+                                        ),
+                                  borderRadius: R.rLg,
+                                )
+                              : null,
+                          child: RepaintBoundary(
+                            key: d == _design ? _card : null,
+                            child: StrengthShareCard(
+                              r,
+                              design: d,
+                              format: _format,
+                              photo: _photo == null ? null : FileImage(_photo!),
+                              clear: _sticker,
+                              darkInk: _darkInk,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: S.x3),
+        Wrap(
+          alignment: WrapAlignment.center,
+          children: [
+            for (final d in StrengthDesign.values)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: S.x1),
+                child: Semantics(
+                  button: true,
+                  selected: d == _design,
+                  child: Pressable(
+                    onTap: () => Motion.enabled(c)
+                        ? _pages.animateToPage(
+                            d.index,
+                            duration: Motion.slow,
+                            curve: Curves.easeOutCubic,
+                          )
+                        : _pages.jumpToPage(d.index),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      padding: const EdgeInsets.symmetric(horizontal: S.x3),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: S.x2,
+                            height: S.x2,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: d == _design ? r.activity.color : p.line,
+                            ),
+                          ),
+                          const SizedBox(width: S.x2),
+                          Text(
+                            strengthDesignLabel(c, d),
+                            style: F.cap.copyWith(
+                              color: d == _design ? p.ink : p.ink3,
+                              fontWeight: d == _design
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
   }
 
   @override
@@ -293,34 +432,42 @@ class _ShareSheetState extends State<ShareSheet> {
                   // whatever the screen does, and `toImage` reads the boundary
                   // — so a 320 pt phone exports the same 1:1 square as a big
                   // one instead of the 0.96:1 Instagram crops.
-                  Center(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: _sticker
-                          // The sticker is transparent; the surface behind it
-                          // is only for seeing it here and is not exported.
-                          ? Container(
-                              decoration: BoxDecoration(
+                  if (_strength)
+                    _strengthCards(c)
+                  else
+                    Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: _sticker
+                            // The sticker is transparent; the surface behind it
+                            // is only for seeing it here and is not exported.
+                            ? Container(
+                                decoration: BoxDecoration(
                                   color: Color.lerp(
-                                      r.activity.color, C.n900, .55),
-                                  borderRadius: R.rLg),
-                              child: RepaintBoundary(
+                                    r.activity.color,
+                                    C.n900,
+                                    .55,
+                                  ),
+                                  borderRadius: R.rLg,
+                                ),
+                                child: RepaintBoundary(
+                                  key: _card,
+                                  child: StoryStickerCard(r, darkInk: _darkInk),
+                                ),
+                              )
+                            : RepaintBoundary(
                                 key: _card,
-                                child: StoryStickerCard(r),
+                                child: PosterCard(
+                                  r,
+                                  photo: _photo == null
+                                      ? null
+                                      : FileImage(_photo!),
+                                  mosaic: _mosaic,
+                                  format: _format,
+                                ),
                               ),
-                            )
-                          : RepaintBoundary(
-                              key: _card,
-                              child: PosterCard(
-                                r,
-                                photo:
-                                    _photo == null ? null : FileImage(_photo!),
-                                mosaic: _mosaic,
-                                format: _format,
-                              ),
-                            ),
+                      ),
                     ),
-                  ),
                   const SizedBox(height: S.x6),
                   // Not a style picker coming back. A format is where the
                   // card is GOING — Instagram crops anything that is not its
@@ -328,7 +475,8 @@ class _ShareSheetState extends State<ShareSheet> {
                   // card and posting a crop of it.
                   SubTabs(
                     [
-                      for (final f in PosterFormat.values) posterFormatLabel(c, f),
+                      for (final f in PosterFormat.values)
+                        posterFormatLabel(c, f),
                       l?.activityShareSticker ?? 'Sticker',
                     ],
                     _sticker
@@ -346,49 +494,77 @@ class _ShareSheetState extends State<ShareSheet> {
                   if (_sticker) ...[
                     const SizedBox(height: S.x3),
                     Text(
-                        l?.activityShareStickerHint ??
-                            'The numbers on a clear background, to lay over your '
-                                'own photo or video in an Instagram story',
-                        style: F.cap.copyWith(color: p.ink3)),
+                      l?.activityShareStickerHint ??
+                          'The numbers on a clear background, to lay over your '
+                              'own photo or video in an Instagram story',
+                      style: F.cap.copyWith(color: p.ink3),
+                    ),
+                  ],
+                  if (_sticker) ...[
+                    const SizedBox(height: S.x4),
+                    Text(
+                      l?.strengthShareInkHeader ?? 'Text colour',
+                      style: F.over.copyWith(color: p.ink3),
+                    ),
+                    const SizedBox(height: S.x3),
+                    SubTabs(
+                      [
+                        l?.strengthShareInkLight ?? 'White',
+                        l?.strengthShareInkDark ?? 'Dark',
+                      ],
+                      _darkInk ? 1 : 0,
+                      (i) => setState(() => _darkInk = i == 1),
+                      color: r.activity.color,
+                    ),
                   ],
                   if (!_sticker) ...[
-                  const SizedBox(height: S.x6),
-                  Text(l?.activitySharePhotoHeader ?? 'Your photo',
-                      style: F.over.copyWith(color: p.ink3)),
-                  const SizedBox(height: S.x3),
-                  Surface(
-                    pad: const EdgeInsets.symmetric(horizontal: S.x4),
-                    child: Column(children: [
-                      SetRow(
-                          LucideIcons.imagePlus,
-                          r.activity.color,
-                          _photo == null
-                              ? (l?.activityShareAddPhoto ?? 'Add a photo')
-                              : (l?.activityShareChangePhoto ??
-                                  'Change photo'),
-                          sub: _photo == null
-                              ? (l?.activitySharePhotoHint ??
-                                  'From this phone. Nothing is uploaded')
-                              : _photo!.path.split('/').last,
-                          onTap: _pickPhoto),
-                      if (_photo != null) ...[
-                        Divider(color: p.line, height: 1),
-                        SetRow(LucideIcons.trash2, C.red,
-                            l?.activityShareRemovePhoto ?? 'Remove the photo',
-                            chevron: false,
-                            onTap: () => setState(() => _photo = null)),
-                      ],
-                    ]),
-                  ),
+                    const SizedBox(height: S.x6),
+                    Text(
+                      l?.activitySharePhotoHeader ?? 'Your photo',
+                      style: F.over.copyWith(color: p.ink3),
+                    ),
+                    const SizedBox(height: S.x3),
+                    Surface(
+                      pad: const EdgeInsets.symmetric(horizontal: S.x4),
+                      child: Column(
+                        children: [
+                          SetRow(
+                            LucideIcons.imagePlus,
+                            r.activity.color,
+                            _photo == null
+                                ? (l?.activityShareAddPhoto ?? 'Add a photo')
+                                : (l?.activityShareChangePhoto ??
+                                      'Change photo'),
+                            sub: _photo == null
+                                ? (l?.activitySharePhotoHint ??
+                                      'From this phone. Nothing is uploaded')
+                                : _photo!.path.split('/').last,
+                            onTap: _pickPhoto,
+                          ),
+                          if (_photo != null) ...[
+                            Divider(color: p.line, height: 1),
+                            SetRow(
+                              LucideIcons.trash2,
+                              C.red,
+                              l?.activityShareRemovePhoto ?? 'Remove the photo',
+                              chevron: false,
+                              onTap: () => setState(() => _photo = null),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ],
                   // The one thing on this screen that leaves the phone. Off
                   // until it is turned on, in the words of what it does — the
                   // tiles are addressed by where the route is, so asking for
                   // them tells openstreetmap.org roughly where you were.
-                  if (_hasRoute && !_sticker) ...[
+                  if (_hasRoute && !_sticker && !_strength) ...[
                     const SizedBox(height: S.x6),
-                    Text(l?.activityShareBasemapHeader ?? 'Basemap',
-                        style: F.over.copyWith(color: p.ink3)),
+                    Text(
+                      l?.activityShareBasemapHeader ?? 'Basemap',
+                      style: F.over.copyWith(color: p.ink3),
+                    ),
                     const SizedBox(height: S.x3),
                     Surface(
                       pad: const EdgeInsets.symmetric(horizontal: S.x4),
@@ -396,7 +572,8 @@ class _ShareSheetState extends State<ShareSheet> {
                         LucideIcons.map,
                         r.activity.color,
                         l?.activityShareDrawMap ?? 'Draw the real map',
-                        sub: l?.activityShareMapHint ??
+                        sub:
+                            l?.activityShareMapHint ??
                             'Asks openstreetmap.org for the tiles covering '
                                 'this route. Off, the route draws on its own',
                         value: _mapConsent
@@ -411,7 +588,7 @@ class _ShareSheetState extends State<ShareSheet> {
                   // appear the instant a format was selected and sit there for
                   // the whole fetch, because `_mapTried` is set before the
                   // first await.
-                  if (_hasRoute && !_sticker && _mapBusy) ...[
+                  if (_hasRoute && !_sticker && !_strength && _mapBusy) ...[
                     const SizedBox(height: S.x3),
                     StatusCard(
                       l?.activityShareFetchingMapTitle ?? 'Fetching the map',
@@ -426,6 +603,7 @@ class _ShareSheetState extends State<ShareSheet> {
                   // neither is a basemap the user has switched off.
                   else if (_hasRoute &&
                       !_sticker &&
+                      !_strength &&
                       _mapConsent &&
                       _mapTried_ &&
                       _mosaic == null) ...[
@@ -482,6 +660,7 @@ class _ShareSheetState extends State<ShareSheet> {
     );
   }
 }
+
 /// that list answers about the numbers, and it must stay in step with `_art`.
 /// The session's average pace in the reader's unit, or null when there is no
 /// pace worth printing — the stat is then not offered at all rather than
@@ -537,7 +716,6 @@ List<(String, String)> _available(ActivityResult r, [UnitsController? u]) => [
   if (r.lapCount != null) ('Laps', '${r.lapCount}'),
 ];
 
-
 (String, String, String) _heroOf(ActivityResult r, UnitsController? u) {
   final fallback = (hms(r.duration), '', r.activity.name);
   final km = r.distanceKm;
@@ -546,8 +724,7 @@ List<(String, String)> _available(ActivityResult r, [UnitsController? u]) => [
       km == null
           ? fallback
           : (
-              (u == null ? km : u.distanceValue(km * 1000))
-                  .toStringAsFixed(2),
+              (u == null ? km : u.distanceValue(km * 1000)).toStringAsFixed(2),
               u?.distanceUnit ?? 'km',
               r.gainM == null
                   ? r.activity.name
@@ -557,9 +734,11 @@ List<(String, String)> _available(ActivityResult r, [UnitsController? u]) => [
       r.strength.volumeKg == null
           ? fallback
           : (
-              grouped(u == null
-                  ? r.strength.volumeKg!
-                  : u.weightValue(r.strength.volumeKg!)),
+              grouped(
+                u == null
+                    ? r.strength.volumeKg!
+                    : u.weightValue(r.strength.volumeKg!),
+              ),
               u?.weightUnit ?? 'kg',
               // The same caption the summary picks, off the same fact.
               // `volumeKg` is Σ over the sets that HAVE a load, so calling it

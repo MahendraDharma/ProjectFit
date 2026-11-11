@@ -79,7 +79,10 @@ Future<bool> shareInstagramStory({
 /// over a bright picture without a panel around it.
 class StoryStickerCard extends StatelessWidget {
   final ActivityResult r;
-  const StoryStickerCard(this.r, {super.key});
+
+  /// Dark type, for a sticker going over a bright photo.
+  final bool darkInk;
+  const StoryStickerCard(this.r, {super.key, this.darkInk = false});
 
   static const width = 300.0;
 
@@ -89,8 +92,13 @@ class StoryStickerCard extends StatelessWidget {
     final accent = r.activity.color;
     final hero = posterHero(r, u);
     final stats = posterStats(r, u).take(3).toList();
-    final shade = [Shadow(color: C.n900.withValues(alpha: .55), blurRadius: 8)];
-    final white = C.white;
+    final shade = [
+      Shadow(
+          color: (darkInk ? C.white : C.n900).withValues(alpha: .55),
+          blurRadius: 8)
+    ];
+    // Named for the light case; it is the ink, whichever ink was asked for.
+    final white = darkInk ? C.n900 : C.white;
     final caption = localizedExportCaption(c, r, hero.$3);
     return MediaQuery(
       data: MediaQuery.of(c).copyWith(textScaler: TextScaler.noScaling),
@@ -130,7 +138,7 @@ class StoryStickerCard extends StatelessWidget {
                 const SizedBox(height: S.x2),
                 Text(
                   r.activity.displayName(c),
-                  style: F.n17.copyWith(color: accent, shadows: shade),
+                  style: F.n17.copyWith(color: white, shadows: shade),
                   maxLines: 1,
                 ),
                 FittedBox(
@@ -168,7 +176,9 @@ class StoryStickerCard extends StatelessWidget {
                   SizedBox(
                     height: 120,
                     width: double.infinity,
-                    child: CustomPaint(painter: StickerRoute(r.route, accent)),
+                    child: CustomPaint(
+                        painter: StickerRoute(r.route, accent,
+                            casing: darkInk ? C.white : C.n900)),
                   ),
                 ],
                 if (stats.isNotEmpty) ...[
@@ -234,7 +244,10 @@ class StoryStickerCard extends StatelessWidget {
 class StickerRoute extends CustomPainter {
   final List<Offset> route; // normalised 0…1
   final Color color;
-  StickerRoute(this.route, this.color);
+
+  /// The outline under the line, so it reads on any photo.
+  final Color casing;
+  StickerRoute(this.route, this.color, {this.casing = C.n900});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -259,10 +272,11 @@ class StickerRoute extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..color = c;
-    canvas.drawPath(path, stroke(C.n900.withValues(alpha: .40), 7));
+    canvas.drawPath(path, stroke(casing.withValues(alpha: .40), 7));
     canvas.drawPath(path, stroke(color, 3.5));
   }
 
   @override
-  bool shouldRepaint(StickerRoute o) => o.route != route || o.color != color;
+  bool shouldRepaint(StickerRoute o) =>
+      o.route != route || o.color != color || o.casing != casing;
 }

@@ -26,8 +26,10 @@ State at the end of the last session, and what to pick up.
   a troubleshooting table keyed by error message.
 
 ## iPhone release
-- Latest release: **v0.26.0** (2026-11-11): share to Instagram (named Share button, transparent
-  sticker, direct story button once a Facebook App ID is set).
+- Latest release: **v0.27.0** (2026-11-11): Hevy-style share cards for gym and calisthenics
+  (Workout / Muscles / Best sets designs), sticker text colour, Indonesian summary and share copy.
+- Previous: v0.26.0 (2026-11-11): share to Instagram (named Share button, transparent sticker,
+  direct story button once a Facebook App ID is set).
 - **The repository was renamed to `MahendraDharma/ProjectFit`** (no hyphen) around 2026-11-11.
   Git push and the GitHub MCP tools still reach it under the old name; `gh api` through the
   session proxy does not (it follows GitHub's redirect to a numeric-ID path, which the proxy
@@ -231,6 +233,21 @@ sumo/trap-bar deadlift, good morning, farmer's walk), named in de/es/fr/id and r
   `com.instagram.share.ADD_TO_STORY` intent in NativeChannels.kt; images go through the OTA
   FileProvider (`cache-path instagram/` in res/xml/filepaths.xml), `<queries>` has
   com.instagram.android. Untested on a device until the ID exists.
+
+## Strength share cards (owner, 2026-11-11, v0.27.0)
+- The owner asked for gym/calisthenics shares "like Hevy". `ui2/activity/strength_share.dart`:
+  `StrengthShareCard(r, design:, format:, photo:, clear:, darkInk:)` with three designs, swiped
+  (PageView) or picked by name on the share sheet for any `Arch.strength` session with sets:
+  **Workout** (each exercise: set count, best set; on a story every set under it),
+  **Muscles** (front/back body map shaded by session sets per muscle, `muscleVolume` rule) and
+  **Best sets** (heaviest set, Epley 1RM, most reps, most volume; bodyweight: reps per set).
+- Bodyweight-only sessions lead with total reps (never a zero volume); the summary no longer
+  shows the "Some sets had no load" card unless loaded and unloaded sets are mixed.
+- Sticker: a White / Dark text choice (`darkInk`, also on `StoryStickerCard`); the activity
+  name on the sticker is set in the ink, not the accent, so it reads over a bright photo.
+- Indonesian: the summary, share and stat-label strings are translated (`muscleName` select
+  for muscles; `display_text.dart` now maps Sets, Pace, Volume, Elevation, Laps).
+- Tests: `test/strength_share_test.dart`.
 
 ## Fit program (owner, 2026-11-04, v0.25.0)
 `lib/ui2/program/fit_plan.dart` (pure, tested in fit_plan_test.dart) builds an N-day plan from
